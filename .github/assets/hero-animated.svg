@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" width="800" height="200">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7C4DFF">
+        <animate attributeName="stop-color" values="#7C4DFF;#00BCD4;#E040FB;#7C4DFF" dur="4s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="50%" style="stop-color:#00BCD4">
+        <animate attributeName="stop-color" values="#00BCD4;#E040FB;#7C4DFF;#00BCD4" dur="4s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" style="stop-color:#E040FB">
+        <animate attributeName="stop-color" values="#E040FB;#7C4DFF;#00BCD4;#E040FB" dur="4s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#A78BFA">
+        <animate attributeName="stop-color" values="#A78BFA;#67E8F9;#C084FC;#A78BFA" dur="5s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" style="stop-color:#67E8F9">
+        <animate attributeName="stop-color" values="#67E8F9;#C084FC;#A78BFA;#67E8F9" dur="5s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softglow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="800" height="200" rx="12" fill="#0D1117"/>
+
+  <!-- Floating particles -->
+  <circle cx="80" cy="40" r="1.5" fill="#7C4DFF" opacity="0.6">
+    <animate attributeName="cy" values="40;30;40" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="150" cy="160" r="1" fill="#00BCD4" opacity="0.4">
+    <animate attributeName="cy" values="160;145;160" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.4;0.9;0.4" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="250" cy="35" r="1.2" fill="#E040FB" opacity="0.5">
+    <animate attributeName="cy" values="35;25;35" dur="3.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="3.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="550" cy="50" r="1.5" fill="#00BCD4" opacity="0.5">
+    <animate attributeName="cy" values="50;38;50" dur="2.8s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="2.8s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="650" cy="155" r="1" fill="#7C4DFF" opacity="0.4">
+    <animate attributeName="cy" values="155;140;155" dur="3.2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.4;0.8;0.4" dur="3.2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="720" cy="45" r="1.3" fill="#E040FB" opacity="0.6">
+    <animate attributeName="cy" values="45;32;45" dur="4.2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="4.2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="400" cy="170" r="1" fill="#00E676" opacity="0.3">
+    <animate attributeName="cy" values="170;158;170" dur="3.8s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.3;0.7;0.3" dur="3.8s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="320" cy="150" r="1.5" fill="#7C4DFF" opacity="0.3">
+    <animate attributeName="cy" values="150;135;150" dur="2.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="480" cy="30" r="1" fill="#FFAB40" opacity="0.4">
+    <animate attributeName="cy" values="30;20;30" dur="3.6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.4;0.8;0.4" dur="3.6s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Glowing background text -->
+  <text x="400" y="105" text-anchor="middle" font-family="'SF Pro Display','Inter','Segoe UI',sans-serif" font-size="80" font-weight="800" fill="url(#grad1)" filter="url(#softglow)" letter-spacing="18">
+    PACE
+  </text>
+
+  <!-- Main title -->
+  <text x="400" y="105" text-anchor="middle" font-family="'SF Pro Display','Inter','Segoe UI',sans-serif" font-size="80" font-weight="800" fill="url(#grad1)" filter="url(#glow)" letter-spacing="18">
+    PACE
+  </text>
+
+  <!-- Subtitle -->
+  <text x="400" y="145" text-anchor="middle" font-family="'SF Pro Display','Inter','Segoe UI',sans-serif" font-size="15" fill="url(#grad2)" letter-spacing="5" font-weight="400">
+    LLM OBSERVABILITY PLATFORM
+  </text>
+
+  <!-- Animated underline -->
+  <line x1="280" y1="158" x2="520" y2="158" stroke="url(#grad1)" stroke-width="1" opacity="0.4">
+    <animate attributeName="x1" values="310;280;310" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="x2" values="490;520;490" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.4;0.8;0.4" dur="3s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- Corner accents -->
+  <line x1="20" y1="20" x2="60" y2="20" stroke="#7C4DFF" stroke-width="2" opacity="0.5">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+  </line>
+  <line x1="20" y1="20" x2="20" y2="50" stroke="#7C4DFF" stroke-width="2" opacity="0.5">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+  </line>
+  <line x1="740" y1="180" x2="780" y2="180" stroke="#00BCD4" stroke-width="2" opacity="0.5">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/>
+  </line>
+  <line x1="780" y1="150" x2="780" y2="180" stroke="#00BCD4" stroke-width="2" opacity="0.5">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/>
+  </line>
+</svg>
