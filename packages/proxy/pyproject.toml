@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pace-proxy"
+version = "0.1.0"
+description = "Pace Opt-In Local Provider Proxy Service"
+authors = [{name = "Pace Team"}]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "httpx>=0.26.0",
+    "pace-sdk"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0"
+]
+
+[project.scripts]
+pace-proxy = "pace_proxy.server:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pace_proxy*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

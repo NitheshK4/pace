@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: pace
+      POSTGRES_PASSWORD: pace
+      POSTGRES_DB: pace
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pace -d pace"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      DATABASE_URL: postgresql+asyncpg://pace:pace@db:5432/pace
+      SYNC_DATABASE_URL: postgresql://pace:pace@db:5432/pace
+      SECRET_KEY: pace-development-secret-key-change-in-production-32bytes
+      INGESTION_KEY_SALT: pace-ingestion-salt-32bytes-secret
+      CORS_ORIGINS: '["http://localhost:3000","http://127.0.0.1:3000","http://localhost:8000"]'
+      DEMO_MODE: "true"
+      SEEDED_USER_EMAIL: "demo@pace.dev"
+      SEEDED_USER_PASSWORD: "PaceDemo123!"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
