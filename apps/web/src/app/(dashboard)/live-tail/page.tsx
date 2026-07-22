@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { apiFetch } from '@/lib/api';
+import { formatINR } from '@/lib/currency';
 import { Radio, Pause, Play, Wifi, WifiOff, Trash2 } from 'lucide-react';
 
 interface LiveEvent {
@@ -32,7 +33,8 @@ export default function LiveTailPage() {
     if (!projectId || isPaused) return;
 
     const token = localStorage.getItem('pace_token') || '';
-    const url = `http://localhost:8000/v1/analytics/live-tail?project_id=${projectId}`;
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/v1';
+    const url = `${baseUrl}/analytics/live-tail?project_id=${projectId}`;
 
     const es = new EventSource(url, { withCredentials: true });
     eventSourceRef.current = es;
@@ -130,7 +132,7 @@ export default function LiveTailPage() {
                 <span>In: <strong className="text-white">{ev.input_tokens}</strong></span>
                 <span>Out: <strong className="text-white">{ev.output_tokens}</strong></span>
                 <span className="text-pace-success font-bold">
-                  {ev.cost_usd !== null ? `$${Number(ev.cost_usd).toFixed(6)}` : 'NULL'}
+                  {ev.cost_usd !== null ? formatINR(ev.cost_usd, 4) : 'NULL'}
                 </span>
                 <span>{ev.latency_ms} ms</span>
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
