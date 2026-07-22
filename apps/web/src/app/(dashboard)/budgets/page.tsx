@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
+import { formatINR, formatINRShort } from '@/lib/currency';
 import { Wallet, Plus, Bell, RefreshCw, X, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface Budget {
@@ -142,7 +143,7 @@ export default function BudgetsPage() {
                     <span className="text-xs text-pace-muted uppercase tracking-wider font-semibold">{b.period} {b.metric} limit</span>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-extrabold text-white">${b.amount_usd.toFixed(2)}</div>
+                    <div className="text-2xl font-extrabold text-white">{formatINRShort(b.amount_usd, 2)}</div>
                     <span className="text-[10px] text-pace-success font-semibold bg-pace-success/10 px-2 py-0.5 rounded border border-pace-success/20">ACTIVE</span>
                   </div>
                 </div>
@@ -198,7 +199,7 @@ export default function BudgetsPage() {
                         {a.severity}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-mono">${a.observed_value.toFixed(2)} / ${a.limit_value.toFixed(2)}</td>
+                    <td className="py-3 px-4 font-mono">{formatINRShort(a.observed_value, 2)} / {formatINRShort(a.limit_value, 2)}</td>
                     <td className="py-3 px-4 text-pace-muted">{a.destination_type}</td>
                     <td className="py-3 px-4">
                       <span className="bg-pace-success/20 text-pace-success px-2 py-0.5 rounded text-[10px] font-bold uppercase">
@@ -238,7 +239,7 @@ export default function BudgetsPage() {
               </div>
 
               <div>
-                <label className="block text-pace-muted mb-1 font-semibold">Amount (USD)</label>
+                <label className="block text-pace-muted mb-1 font-semibold">Amount (USD - auto-converted to INR)</label>
                 <input
                   type="number"
                   step="1"
