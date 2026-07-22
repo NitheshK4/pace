@@ -5,6 +5,7 @@ import uuid
 import logging
 import uvicorn
 import httpx
+from typing import Dict, Any, Optional
 from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.responses import StreamingResponse
 from pace.queue import ResilientTelemetryQueue
@@ -140,6 +141,7 @@ async def proxy_forward(request: Request, provider_path: str):
             })
 
             resp_headers = clean_headers(dict(resp.headers))
+            resp_headers["x-pace-proxy-latency-ms"] = str(latency_ms)
             return Response(content=resp.content, status_code=resp.status_code, headers=resp_headers)
 
     except Exception as exc:
