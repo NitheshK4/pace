@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
+import { formatINR } from '@/lib/currency';
 import { Search, Download, Filter, X, ChevronRight, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function ExplorerPage() {
@@ -109,7 +110,7 @@ export default function ExplorerPage() {
                   <th className="py-3 px-4">Model</th>
                   <th className="py-3 px-4">Input Tokens</th>
                   <th className="py-3 px-4">Output Tokens</th>
-                  <th className="py-3 px-4">Cost (USD)</th>
+                  <th className="py-3 px-4">Cost (INR)</th>
                   <th className="py-3 px-4">Latency</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4 text-right">Action</th>
@@ -124,7 +125,7 @@ export default function ExplorerPage() {
                     <td className="py-3 px-4">{ev.input_tokens}</td>
                     <td className="py-3 px-4">{ev.output_tokens}</td>
                     <td className="py-3 px-4 font-mono text-white">
-                      {ev.cost_usd !== null ? `$${Number(ev.cost_usd).toFixed(6)}` : <span className="text-pace-muted italic">NULL</span>}
+                      {ev.cost_usd !== null ? formatINR(ev.cost_usd, 4) : <span className="text-pace-muted italic">NULL</span>}
                     </td>
                     <td className="py-3 px-4">{ev.latency_ms} ms</td>
                     <td className="py-3 px-4">
@@ -173,7 +174,7 @@ export default function ExplorerPage() {
                 <div className="flex justify-between"><span>Reasoning Tokens:</span><span className="text-white">{selectedEvent.reasoning_tokens || 0}</span></div>
                 <div className="flex justify-between border-t border-pace-border pt-2 font-bold">
                   <span>Estimated Cost:</span>
-                  <span className="text-pace-success">{selectedEvent.cost_usd ? `$${Number(selectedEvent.cost_usd).toFixed(6)}` : 'NULL (Unknown)'}</span>
+                  <span className="text-pace-success">{selectedEvent.cost_usd !== null ? formatINR(selectedEvent.cost_usd, 4) : 'NULL (Unknown)'}</span>
                 </div>
               </div>
 
