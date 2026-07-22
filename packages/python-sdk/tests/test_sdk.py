@@ -98,3 +98,13 @@ def test_queue_overflow_behavior():
 
     assert tq.dropped_events_count >= 1
     tq.close()
+
+def test_queue_get_stats():
+    tq = ResilientTelemetryQueue(endpoint="http://localhost:9999", api_key="pace_key", max_queue_size=10)
+    tq.enqueue({"test": 1})
+    stats = tq.get_stats()
+    assert "queued" in stats
+    assert "sent" in stats
+    assert "dropped" in stats
+    tq.close()
+
