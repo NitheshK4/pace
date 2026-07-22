@@ -8,6 +8,13 @@ __pycache__/
 *.pyd
 .pytest_cache/
 
+# Databases & Build Info
+*.db
+*.sqlite
+*.sqlite3
+*.egg-info/
+*.tsbuildinfo
+
 # Node & Next.js
 node_modules/
 .next/
