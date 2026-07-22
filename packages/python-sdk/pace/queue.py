@@ -96,6 +96,13 @@ class ResilientTelemetryQueue:
             f"Pace server might be unreachable."
         )
 
+    def get_stats(self) -> Dict[str, int]:
+        return {
+            "queued": self._queue.qsize(),
+            "sent": self.sent_events_count,
+            "dropped": self.dropped_events_count
+        }
+
     def flush(self, timeout: float = 5.0):
         start = time.time()
         while not self._queue.empty() and (time.time() - start) < timeout:
@@ -105,3 +112,4 @@ class ResilientTelemetryQueue:
         self.flush()
         self._shutdown_event.set()
         self._thread.join(timeout=2.0)
+
