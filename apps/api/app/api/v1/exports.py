@@ -71,3 +71,57 @@ async def export_events_csv(
     response = Response(content=output.getvalue(), media_type="text/csv")
     response.headers["Content-Disposition"] = f"attachment; filename=pace-export-{project_id}.csv"
     return response
+
+
+@router.get("/json")
+async def export_events_json(
+    project_id: str = Query(...),
+    start_time: Optional[datetime] = Query(None),
+    end_time: Optional[datetime] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await check_project_access(project_id, current_user.id, db)
+    
+    stmt = select(UsageEvent).where(UsageEvent.project_id == project_id)
+    if start_time:
+        stmt = stmt.where(UsageEvent.time >= start_time)
+    if end_time:
+        stmt = stmt.where(UsageEvent.time <= end_time)
+    
+    stmt = stmt.order_by(desc(UsageEvent.time)).limit(10000)
+    res = await db.execute(stmt)
+    events = res.scalars().all()
+
+    data = [
+        {
+            "event_id": ev.event_id,
+            "timestamp": ev.time.isoformat() if ev.time else None,
+            "provider": ev.provider,
+            "model": ev.model,
+            "endpoint": ev.endpoint,
+            "input_tokens": ev.input_tokens,
+            "output_tokens": ev.output_tokens,
+            "cached_input_tokens": ev.cached_input_tokens,
+            "reasoning_tokens": ev.reasoning_tokens,
+            "cost_usd": float(ev.cost_usd) if ev.cost_usd is not None else None,
+            "cost_reason": ev.cost_reason,
+            "latency_ms": ev.latency_ms,
+            "status_code": ev.status_code,
+            "request_id": ev.request_id
+        }
+        for ev in events
+    ]
+
+    audit = AuditLog(
+        project_id=project_id,
+        user_id=current_user.id,
+        action="export.json",
+        resource_type="usage_events",
+        details_json={"count": len(events)}
+    )
+    db.add(audit)
+    await db.commit()
+
+    return {"project_id": project_id, "count": len(data), "events": data}
+
