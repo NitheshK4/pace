@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
+import { formatINR } from '@/lib/currency';
 import { Database, Plus, ExternalLink, RefreshCw, X } from 'lucide-react';
 
 interface PricingRate {
@@ -97,8 +98,8 @@ export default function PricingPage() {
                 <tr>
                   <th className="py-3.5 px-4">Provider</th>
                   <th className="py-3.5 px-4">Model</th>
-                  <th className="py-3.5 px-4">Input / 1k Tokens</th>
-                  <th className="py-3.5 px-4">Output / 1k Tokens</th>
+                  <th className="py-3.5 px-4">Input / 1k (INR)</th>
+                  <th className="py-3.5 px-4">Output / 1k (INR)</th>
                   <th className="py-3.5 px-4">Cache Read / 1k</th>
                   <th className="py-3.5 px-4">Reasoning / 1k</th>
                   <th className="py-3.5 px-4">Effective From</th>
@@ -110,10 +111,10 @@ export default function PricingPage() {
                   <tr key={r.id} className="hover:bg-pace-border/30 transition">
                     <td className="py-3.5 px-4 font-bold text-white uppercase">{r.provider}</td>
                     <td className="py-3.5 px-4 font-mono text-pace-accent font-semibold">{r.model}</td>
-                    <td className="py-3.5 px-4 font-mono">${r.input_cost_per_1k.toFixed(6)}</td>
-                    <td className="py-3.5 px-4 font-mono">${r.output_cost_per_1k.toFixed(6)}</td>
-                    <td className="py-3.5 px-4 font-mono">${r.cache_read_cost_per_1k.toFixed(6)}</td>
-                    <td className="py-3.5 px-4 font-mono">${r.reasoning_cost_per_1k.toFixed(6)}</td>
+                    <td className="py-3.5 px-4 font-mono">{formatINR(r.input_cost_per_1k, 4)}</td>
+                    <td className="py-3.5 px-4 font-mono">{formatINR(r.output_cost_per_1k, 4)}</td>
+                    <td className="py-3.5 px-4 font-mono">{formatINR(r.cache_read_cost_per_1k, 4)}</td>
+                    <td className="py-3.5 px-4 font-mono">{formatINR(r.reasoning_cost_per_1k, 4)}</td>
                     <td className="py-3.5 px-4 text-pace-muted">{new Date(r.effective_from).toLocaleDateString()}</td>
                     <td className="py-3.5 px-4">
                       {r.source_url ? (
