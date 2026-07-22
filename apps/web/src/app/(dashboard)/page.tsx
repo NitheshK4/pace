@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
+import { formatINR } from '@/lib/currency';
 import { 
-  DollarSign, 
+  IndianRupee, 
   Activity, 
   Cpu, 
   Zap, 
@@ -124,11 +125,11 @@ export default function OverviewPage() {
         {/* Estimated Spend Card */}
         <div className="bg-pace-surface border border-pace-border rounded-xl p-5 space-y-2 relative overflow-hidden">
           <div className="flex items-center justify-between text-pace-muted text-xs font-semibold uppercase tracking-wider">
-            <span>Estimated Spend (30d)</span>
-            <DollarSign className="w-4 h-4 text-pace-accent" />
+            <span>Estimated Spend (INR)</span>
+            <IndianRupee className="w-4 h-4 text-pace-accent" />
           </div>
           <div className="text-3xl font-extrabold text-white">
-            ${overview.total_spend_usd.toFixed(4)}
+            {formatINR(overview.total_spend_usd, 2)}
           </div>
           <div className="text-[11px] text-pace-muted flex items-center space-x-1">
             <span className="w-1.5 h-1.5 rounded-full bg-pace-accent"></span>
@@ -229,7 +230,7 @@ export default function OverviewPage() {
                     <td className="py-3 px-4 font-mono text-pace-accent">{ev.model}</td>
                     <td className="py-3 px-4">{ev.input_tokens} / {ev.output_tokens}</td>
                     <td className="py-3 px-4 font-mono text-white">
-                      {ev.cost_usd !== null ? `$${Number(ev.cost_usd).toFixed(6)}` : <span className="text-pace-muted italic">NULL (Unknown)</span>}
+                      {ev.cost_usd !== null ? formatINR(ev.cost_usd, 4) : <span className="text-pace-muted italic">NULL (Unknown)</span>}
                     </td>
                     <td className="py-3 px-4">{ev.latency_ms} ms</td>
                     <td className="py-3 px-4">
