@@ -11,6 +11,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newApiKeyData, setNewApiKeyData] = useState<any>(null);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('pace_token')) {
+      window.location.href = '/login';
+    }
+  }, []);
+
   const handleProjectCreated = (project: any, initialKey: any) => {
     setIsCreateOpen(false);
     setSelectedProjectId(project.id);
