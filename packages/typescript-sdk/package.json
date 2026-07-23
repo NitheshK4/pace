@@ -1,0 +1,25 @@
+{
+  "name": "@pace/sdk",
+  "version": "0.1.0",
+  "description": "Official TypeScript & Node.js client SDK for Pace LLM Observability",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/sdk.test.js"
+  },
+  "keywords": [
+    "pace",
+    "llm",
+    "observability",
+    "openai",
+    "anthropic",
+    "cost-tracking"
+  ],
+  "author": "Pace Dev Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  }
+}
