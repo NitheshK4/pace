@@ -21,6 +21,7 @@ interface LiveEvent {
 export default function LiveTailPage() {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [events, setEvents] = useState<LiveEvent[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'all' | '2xx' | '429' | '5xx'>('all');
   const [isPaused, setIsPaused] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -107,6 +108,29 @@ export default function LiveTailPage() {
         </div>
       </div>
 
+      {/* Filter Tabs Bar */}
+      <div className="bg-pace-surface border border-pace-border rounded-xl p-3 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <span className="text-xs text-pace-muted font-semibold mr-2">Filter Status:</span>
+          {(['all', '2xx', '429', '5xx'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setStatusFilter(mode)}
+              className={`px-3 py-1 rounded-lg text-xs font-bold uppercase transition ${
+                statusFilter === mode
+                  ? 'bg-pace-accent text-pace-bg shadow'
+                  : 'bg-pace-bg border border-pace-border text-pace-muted hover:text-white'
+              }`}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
+        <div className="text-xs text-pace-muted font-mono">
+          Feed events: {events.length}
+        </div>
+      </div>
+
       {/* Stream Events Box */}
       <div className="bg-pace-surface border border-pace-border rounded-xl p-5 shadow-2xl space-y-3 font-mono text-xs max-h-[600px] overflow-y-auto">
         {events.length === 0 ? (
@@ -115,34 +139,41 @@ export default function LiveTailPage() {
             <div>Listening for incoming telemetry events...</div>
           </div>
         ) : (
-          events.map((ev) => (
-            <div
-              key={ev.id}
-              className="bg-pace-bg border border-pace-border/60 p-3.5 rounded-lg flex flex-wrap items-center justify-between gap-3 animate-fade-in hover:border-pace-accent/50 transition"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-pace-muted">{new Date(ev.time).toLocaleTimeString()}</span>
-                <span className="bg-pace-accent/10 border border-pace-accent/30 text-pace-accent px-2 py-0.5 rounded uppercase text-[10px] font-bold">
-                  {ev.provider}
-                </span>
-                <span className="text-white font-bold">{ev.model}</span>
-              </div>
+          events
+            .filter((ev) => {
+              if (statusFilter === '2xx') return ev.status_code >= 200 && ev.status_code < 300;
+              if (statusFilter === '429') return ev.status_code === 429;
+              if (statusFilter === '5xx') return ev.status_code >= 500;
+              return true;
+            })
+            .map((ev) => (
+              <div
+                key={ev.id}
+                className="bg-pace-bg border border-pace-border/60 p-3.5 rounded-lg flex flex-wrap items-center justify-between gap-3 animate-fade-in hover:border-pace-accent/50 transition"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-pace-muted">{new Date(ev.time).toLocaleTimeString()}</span>
+                  <span className="bg-pace-accent/10 border border-pace-accent/30 text-pace-accent px-2 py-0.5 rounded uppercase text-[10px] font-bold">
+                    {ev.provider}
+                  </span>
+                  <span className="text-white font-bold">{ev.model}</span>
+                </div>
 
-              <div className="flex items-center space-x-4">
-                <span>In: <strong className="text-white">{ev.input_tokens}</strong></span>
-                <span>Out: <strong className="text-white">{ev.output_tokens}</strong></span>
-                <span className="text-pace-success font-bold">
-                  {ev.cost_usd !== null ? formatINR(ev.cost_usd, 4) : 'NULL'}
-                </span>
-                <span>{ev.latency_ms} ms</span>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                  ev.status_code < 400 ? 'bg-pace-success/20 text-pace-success' : 'bg-pace-danger/20 text-pace-danger'
-                }`}>
-                  {ev.status_code}
-                </span>
+                <div className="flex items-center space-x-4">
+                  <span>In: <strong className="text-white">{ev.input_tokens}</strong></span>
+                  <span>Out: <strong className="text-white">{ev.output_tokens}</strong></span>
+                  <span className="text-pace-success font-bold">
+                    {ev.cost_usd !== null ? formatINR(ev.cost_usd, 4) : 'NULL'}
+                  </span>
+                  <span>{ev.latency_ms} ms</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    ev.status_code < 400 ? 'bg-pace-success/20 text-pace-success' : 'bg-pace-danger/20 text-pace-danger'
+                  }`}>
+                    {ev.status_code}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))
+            ))
         )}
       </div>
     </div>
