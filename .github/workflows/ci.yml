@@ -1,0 +1,61 @@
+name: Pace Continuous Integration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-tests:
+    name: Run FastAPI Unit & Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r apps/api/requirements.txt
+          pip install pytest pytest-asyncio pytest-cov httpx
+
+      - name: Run Pytest
+        run: |
+          cd apps/api
+          PYTHONPATH=. pytest
+
+  typescript-sdk-tests:
+    name: Build & Test TypeScript SDK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: packages/typescript-sdk/package-lock.json
+
+      - name: Install dependencies & Test
+        run: |
+          cd packages/typescript-sdk
+          npm ci
+          npm run build
+          npm test
+
+  docker-build:
+    name: Verify Docker Compose Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test Docker Compose configuration
+        run: |
+          docker compose config
