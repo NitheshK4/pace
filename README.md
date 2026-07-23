@@ -100,18 +100,37 @@ res = client.chat.completions.create(
 )
 ```
 
-Also works with **Anthropic**:
+</td>
+<td width="33%" valign="top">
 
-```python
-from anthropic import Anthropic
-from pace import track
-client = track(Anthropic(), api_key="pace_YOUR_KEY")
+### Option 2 — TypeScript SDK
+
+```bash
+npm install @pace/sdk
+```
+
+```typescript
+import { PaceClient } from '@pace/sdk';
+
+const pace = new PaceClient({
+  apiKey: 'pace_YOUR_KEY',
+  endpoint: 'http://localhost:8000'
+});
+
+// Non-blocking telemetry recording
+pace.record({
+  provider: 'openai',
+  model: 'gpt-4o',
+  input_tokens: 1200,
+  output_tokens: 400,
+  latency_ms: 350
+});
 ```
 
 </td>
-<td width="50%" valign="top">
+<td width="33%" valign="top">
 
-### Option 2 — Local Proxy (Zero Code)
+### Option 3 — Local Proxy (Zero Code)
 
 ```bash
 pip install pace-proxy
@@ -123,16 +142,12 @@ PACE_API_KEY=pace_YOUR_KEY pace-proxy
 Point your app at the proxy:
 
 ```bash
-# Before: api.openai.com
-# After:  127.0.0.1:8787
-
 curl http://127.0.0.1:8787/v1/chat/completions \
   -H "Authorization: Bearer sk-..." \
-  -H "Content-Type: application/json" \
   -d '{"model":"gpt-4o","messages":[...]}'
 ```
 
-Forwards transparently, extracts telemetry, reports to Pace. Your code stays untouched.
+Forwards transparently, extracts telemetry, reports to Pace.
 
 > 🔒 Binds to `127.0.0.1` only.
 
@@ -263,6 +278,7 @@ pace/
 │
 ├── packages/
 │   ├── python-sdk/                # pace-sdk: track(), flush(), ResilientTelemetryQueue
+│   ├── typescript-sdk/            # @pace/sdk: PaceClient, ResilientTelemetryQueue (Node/TS)
 │   └── proxy/                     # pace-proxy: reverse proxy + provider allowlist
 │
 ├── docker-compose.yml             # One-command deploy
