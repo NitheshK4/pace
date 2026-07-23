@@ -37,4 +37,30 @@ describe('Pace TypeScript SDK', () => {
     assert.strictEqual(queue.getStats().pendingEvents, 2);
     queue.stop();
   });
+
+  test('flushes queue gracefully on network failure without throwing errors', async () => {
+    const client = new PaceClient({
+      apiKey: 'pace_invalid_key',
+      endpoint: 'http://127.0.0.1:9999', // Non-existent port
+      flushIntervalMs: 10000,
+    });
+
+    client.record({
+      provider: 'anthropic',
+      model: 'claude-3-5-sonnet',
+      input_tokens: 500,
+      output_tokens: 200,
+      latency_ms: 350,
+    });
+
+    assert.strictEqual(client.getStats().pendingEvents, 1);
+    
+    // Should swallow network exception cleanly and empty queue
+    await assert.doesNotReject(async () => {
+      await client.flush();
+    });
+
+    assert.strictEqual(client.getStats().pendingEvents, 0);
+    client.shutdown();
+  });
 });
