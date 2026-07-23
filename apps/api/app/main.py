@@ -17,6 +17,7 @@ from app.api.v1.pricing import router as pricing_router, seed_default_pricing_ra
 from app.api.v1.budgets import router as budgets_router
 from app.api.v1.exports import router as exports_router
 from app.api.v1.system import router as system_router
+from app.core.rate_limit import RateLimitMiddleware
 
 setup_logging()
 
@@ -69,6 +70,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RateLimitMiddleware)
 
 # Global Exception Handler to ensure clean JSON responses without leaking internal stack trace
 @app.exception_handler(Exception)
