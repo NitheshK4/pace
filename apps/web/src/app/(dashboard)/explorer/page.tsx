@@ -43,9 +43,32 @@ export default function ExplorerPage() {
     }
   };
 
-  const handleExportCSV = () => {
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportCSV = async () => {
     if (!projectId) return;
-    window.open(`http://localhost:8000/v1/exports/csv?project_id=${projectId}`, '_blank');
+    setExporting(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('pace_token') : null;
+      const res = await fetch(`http://localhost:8000/v1/exports/csv?project_id=${projectId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error('Failed to export CSV');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pace_telemetry_${projectId}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      // Fallback open window
+      window.open(`http://localhost:8000/v1/exports/csv?project_id=${projectId}`, '_blank');
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -60,10 +83,15 @@ export default function ExplorerPage() {
         </div>
         <button
           onClick={handleExportCSV}
-          className="bg-pace-surface border border-pace-border hover:bg-pace-border text-white text-sm font-semibold px-4 py-2 rounded-xl flex items-center space-x-2 transition shadow-lg"
+          disabled={exporting || !projectId}
+          className="bg-pace-surface border border-pace-border hover:bg-pace-border text-white text-sm font-semibold px-4 py-2 rounded-xl flex items-center space-x-2 transition shadow-lg disabled:opacity-50"
         >
-          <Download className="w-4 h-4 text-pace-accent" />
-          <span>Export CSV</span>
+          {exporting ? (
+            <RefreshCw className="w-4 h-4 text-pace-accent animate-spin" />
+          ) : (
+            <Download className="w-4 h-4 text-pace-accent" />
+          )}
+          <span>{exporting ? 'Exporting...' : 'Export CSV'}</span>
         </button>
       </div>
 
