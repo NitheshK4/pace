@@ -72,6 +72,23 @@ app.add_middleware(
 )
 app.add_middleware(RateLimitMiddleware)
 
+# Security Headers & Payload Limit Middleware
+@app.middleware("http")
+async def security_headers_and_limits_middleware(request: Request, call_next):
+    # Enforce max body payload limit (1 MB)
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > 1_048_576:
+        return JSONResponse(
+            status_code=413,
+            content={"detail": "Payload too large. Maximum request body size is 1MB."}
+        )
+
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    return response
+
 # Global Exception Handler to ensure clean JSON responses without leaking internal stack trace
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
