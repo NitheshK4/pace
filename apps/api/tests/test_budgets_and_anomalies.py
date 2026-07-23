@@ -43,7 +43,6 @@ async def test_period_bounds():
 @pytest.mark.asyncio
 async def test_budget_evaluation_and_deduplication():
     async with TestingSessionLocal() as db:
-        # Create budget with $10 limit
         budget = Budget(
             project_id="proj_test123",
             name="Test Monthly Budget",
@@ -58,7 +57,6 @@ async def test_budget_evaluation_and_deduplication():
         await db.commit()
         await db.refresh(budget)
 
-        # Ingest event causing spend = $6.00 (60% threshold breached)
         ev1 = UsageEvent(
             project_id="proj_test123",
             event_id="evt_spend1",
@@ -73,19 +71,16 @@ async def test_budget_evaluation_and_deduplication():
         db.add(ev1)
         await db.commit()
 
-        # First Evaluation: Should trigger 50% threshold alert!
         deliv1 = await BudgetEvaluationService.evaluate_budget(db, budget)
         assert len(deliv1) == 1
         assert deliv1[0].threshold_percent == 50
         assert deliv1[0].event_type == "budget.threshold_breached"
 
-        # Second Evaluation: Should NOT trigger duplicate alert for 50% threshold!
         deliv2 = await BudgetEvaluationService.evaluate_budget(db, budget)
         assert len(deliv2) == 0
 
 @pytest.mark.asyncio
 async def test_anomaly_detector_safeguard():
     async with TestingSessionLocal() as db:
-        # Check anomaly detection on empty/small data (must return empty list safely)
         anomalies = await AnomalyDetectorService.detect_anomalies(db, "proj_empty")
         assert anomalies == []
