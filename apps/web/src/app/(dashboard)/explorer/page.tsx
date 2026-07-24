@@ -11,6 +11,8 @@ export default function ExplorerPage() {
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [providerFilter, setProviderFilter] = useState('');
   const [modelFilter, setModelFilter] = useState('');
+  const [errorsOnly, setErrorsOnly] = useState(false);
+  const [minLatencyMs, setMinLatencyMs] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,7 +23,7 @@ export default function ExplorerPage() {
     if (projectId) {
       loadEvents(projectId);
     }
-  }, [projectId, providerFilter, modelFilter]);
+  }, [projectId, providerFilter, modelFilter, errorsOnly, minLatencyMs]);
 
   const fetchFirstProject = async () => {
     try {
@@ -36,12 +38,19 @@ export default function ExplorerPage() {
       let query = `/analytics/events?project_id=${pid}&limit=50`;
       if (providerFilter) query += `&provider=${providerFilter}`;
       if (modelFilter) query += `&model=${modelFilter}`;
+      if (errorsOnly) query += `&errors_only=true`;
+      if (minLatencyMs) query += `&min_latency_ms=${minLatencyMs}`;
       const data = await apiFetch<{ events: any[] }>(query);
       setEvents(data.events);
     } catch {} finally {
       setLoading(false);
     }
   };
+
+  const totalCost = events.reduce((sum, ev) => sum + (ev.cost_usd || 0), 0);
+  const avgLatency = events.length > 0 ? Math.round(events.reduce((sum, ev) => sum + (ev.latency_ms || 0), 0) / events.length) : 0;
+  const errorCount = events.filter((ev) => ev.status_code >= 400).length;
+  const errorRate = events.length > 0 ? ((errorCount / events.length) * 100).toFixed(1) : '0.0';
 
   const [exporting, setExporting] = useState(false);
 
@@ -64,7 +73,6 @@ export default function ExplorerPage() {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch {
-      // Fallback open window
       window.open(`http://localhost:8000/v1/exports/csv?project_id=${projectId}`, '_blank');
     } finally {
       setExporting(false);
@@ -95,24 +103,66 @@ export default function ExplorerPage() {
         </button>
       </div>
 
+      {/* Summary Metrics Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-pace-surface border border-pace-border p-4 rounded-xl shadow-md">
+          <div className="text-xs text-pace-muted font-medium">Filtered Events</div>
+          <div className="text-xl font-bold text-white mt-1">{events.length}</div>
+        </div>
+        <div className="bg-pace-surface border border-pace-border p-4 rounded-xl shadow-md">
+          <div className="text-xs text-pace-muted font-medium">Filtered Spend</div>
+          <div className="text-xl font-bold text-pace-success mt-1">{formatINR(totalCost, 4)}</div>
+        </div>
+        <div className="bg-pace-surface border border-pace-border p-4 rounded-xl shadow-md">
+          <div className="text-xs text-pace-muted font-medium">Avg Latency</div>
+          <div className="text-xl font-bold text-pace-accent mt-1">{avgLatency} ms</div>
+        </div>
+        <div className="bg-pace-surface border border-pace-border p-4 rounded-xl shadow-md">
+          <div className="text-xs text-pace-muted font-medium">Error Rate</div>
+          <div className={`text-xl font-bold mt-1 ${errorCount > 0 ? 'text-pace-danger' : 'text-white'}`}>
+            {errorRate}%
+          </div>
+        </div>
+      </div>
+
       {/* Filters Bar */}
       <div className="bg-pace-surface border border-pace-border rounded-xl p-4 flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Filter className="w-4 h-4 text-pace-muted" />
           <input
             type="text"
-            placeholder="Filter by Provider (e.g. openai)..."
+            placeholder="Filter by Provider..."
             value={providerFilter}
             onChange={(e) => setProviderFilter(e.target.value)}
-            className="bg-pace-bg border border-pace-border rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-pace-accent w-48"
+            className="bg-pace-bg border border-pace-border rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-pace-accent w-40"
           />
           <input
             type="text"
-            placeholder="Filter by Model (e.g. gpt-4o)..."
+            placeholder="Filter by Model..."
             value={modelFilter}
             onChange={(e) => setModelFilter(e.target.value)}
-            className="bg-pace-bg border border-pace-border rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-pace-accent w-48"
+            className="bg-pace-bg border border-pace-border rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-pace-accent w-40"
           />
+          <select
+            value={minLatencyMs}
+            onChange={(e) => setMinLatencyMs(e.target.value)}
+            className="bg-pace-bg border border-pace-border rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-pace-accent"
+          >
+            <option value="">All Latencies</option>
+            <option value="100">≥ 100 ms</option>
+            <option value="500">≥ 500 ms</option>
+            <option value="1000">≥ 1000 ms (1s)</option>
+            <option value="3000">≥ 3000 ms (3s)</option>
+          </select>
+          <label className="flex items-center space-x-2 text-xs text-pace-muted cursor-pointer hover:text-white transition">
+            <input
+              type="checkbox"
+              checked={errorsOnly}
+              onChange={(e) => setErrorsOnly(e.target.checked)}
+              className="rounded border-pace-border text-pace-accent focus:ring-pace-accent bg-pace-bg"
+            />
+            <span>Errors Only</span>
+          </label>
         </div>
         <div className="text-xs text-pace-muted">
           Showing {events.length} event(s)
