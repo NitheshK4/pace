@@ -28,7 +28,14 @@ class Settings(BaseSettings):
     INGESTION_KEY_SALT: str = Field(default="pace-ingestion-salt-32bytes-secret", min_length=16)
 
     # CORS Settings
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000"]
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+        "http://localhost:8000",
+        "*"
+    ]
 
     # Demo Mode
     DEMO_MODE: bool = False
