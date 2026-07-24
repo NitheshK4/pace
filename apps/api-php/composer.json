@@ -1,0 +1,16 @@
+{
+  "name": "pace/api-php",
+  "description": "Standalone PHP API Backend Service for Pace LLM Observability Platform",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.1",
+    "ext-json": "*",
+    "ext-pdo": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "PaceApi\\": "src/"
+    }
+  }
+}

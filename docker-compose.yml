@@ -55,5 +55,13 @@ services:
     depends_on:
       - api
 
+  api-php:
+    build:
+      context: ./apps/api-php
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8001:8001"
+
 volumes:
   postgres_data:
