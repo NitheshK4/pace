@@ -7,8 +7,8 @@ import { Code2, Copy, Check, Send, Sparkles, Terminal, CheckCircle2 } from 'luci
 export default function QuickStartPage() {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string>('pace_YOUR_INGESTION_KEY');
-  const [copiedOpenAI, setCopiedOpenAI] = useState(false);
-  const [copiedAnthropic, setCopiedAnthropic] = useState(false);
+  const [activeTab, setActiveTab] = useState<'python' | 'typescript' | 'php'>('python');
+  const [copiedCode, setCopiedCode] = useState(false);
   const [testStatus, setTestStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -26,45 +26,65 @@ export default function QuickStartPage() {
           setApiKey(`${keys[0].key_prefix}...`);
         }
       }
-    } catch {
-      // fallback
-    }
+    } catch {}
   };
 
-  const openAiCode = `from openai import OpenAI
-from pace import track
+  const codeSnippets = {
+    python: `from openai import OpenAI
+from pace import PaceClient
 
-# Instrument your OpenAI client with 1 line of code
-client = track(
-    OpenAI(),
-    api_key="${apiKey}",
-    endpoint="http://localhost:8000",
-    metadata={"service": "chat-backend", "environment": "production"}
-)
+# Instrument your OpenAI client with context-managed auto-flushing
+with PaceClient(api_key="${apiKey}", endpoint="http://localhost:8000") as pace:
+    client = pace.track(OpenAI(), tags={"env": "production"})
+    res = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": "Analyze system performance."}]
+    )
+print("Response received. Telemetry recorded with Pace.")`,
 
-response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": "Analyze system performance."}]
-)
-print("Response received. Telemetry sent to Pace in background.")`;
+    typescript: `import { PaceClient } from '@pace/sdk';
 
-  const anthropicCode = `from anthropic import Anthropic
-from pace import track
+const pace = new PaceClient({
+  apiKey: '${apiKey}',
+  endpoint: 'http://localhost:8000'
+});
 
-# Instrument your Anthropic client with 1 line of code
-client = track(
-    Anthropic(),
-    api_key="${apiKey}",
-    endpoint="http://localhost:8000",
-    metadata={"service": "agent-workflow", "environment": "staging"}
-)
+// Record telemetry event in background
+pace.record({
+  provider: 'openai',
+  model: 'gpt-4o',
+  input_tokens: 1200,
+  output_tokens: 400,
+  latency_ms: 350
+});`,
 
-response = client.messages.create(
-    model="claude-3-5-sonnet-20241022",
-    max_tokens=1000,
-    messages=[{"role": "user", "content": "Summarize user feedback."}]
-)
-print("Response received. Telemetry sent to Pace in background.")`;
+    php: `<?php
+require_once 'vendor/autoload.php';
+
+use Pace\\PaceClient;
+
+$pace = new PaceClient(
+    apiKey: '${apiKey}',
+    endpoint: 'http://localhost:8000'
+);
+
+// Record telemetry event
+$pace->record([
+    'provider'      => 'openai',
+    'model'         => 'gpt-4o',
+    'input_tokens'  => 1200,
+    'output_tokens' => 400,
+    'latency_ms'    => 350,
+    'metadata'      => ['environment' => 'production', 'app' => 'laravel']
+]);
+echo "Telemetry event successfully sent to Pace!\\n";`
+  };
+
+  const installCommands = {
+    python: 'pip install pace-sdk openai anthropic',
+    typescript: 'npm install @pace/sdk',
+    php: 'composer require pace/sdk'
+  };
 
   const handleSendTestEvent = async () => {
     if (!projectId) return;
@@ -72,14 +92,12 @@ print("Response received. Telemetry sent to Pace in background.")`;
     setTestStatus(null);
 
     try {
-      // Create temporary test key or send test event through API test endpoint
       const keys = await apiFetch<any[]>(`/projects/${projectId}/keys`);
       if (keys.length === 0) {
         setTestStatus('Error: No active key found for project.');
         setLoading(false);
         return;
       }
-      
       setTestStatus('Test telemetry event successfully queued and ingested!');
     } catch (err: any) {
       setTestStatus(`Error sending test event: ${err.message}`);
@@ -96,66 +114,59 @@ print("Response received. Telemetry sent to Pace in background.")`;
           <span>SDK Quick Start Guide</span>
         </h2>
         <p className="text-sm text-pace-muted mt-1">
-          Instrument your OpenAI or Anthropic LLM clients with 1 line of code. Pace captures usage, cost estimates, and latency in background non-blocking threads without ever logging prompt or completion content.
+          Instrument your LLM apps across Python, TypeScript, or PHP. Pace captures usage, cost estimates, and latency without ever storing prompt or completion content.
         </p>
+      </div>
+
+      {/* Language Switcher Tabs */}
+      <div className="flex space-x-2 border-b border-pace-border pb-3">
+        {(['python', 'typescript', 'php'] as const).map((lang) => (
+          <button
+            key={lang}
+            onClick={() => setActiveTab(lang)}
+            className={`px-4 py-2 text-xs font-bold rounded-lg uppercase tracking-wider transition ${
+              activeTab === lang
+                ? 'bg-pace-accent text-pace-bg shadow-md'
+                : 'bg-pace-surface border border-pace-border text-pace-muted hover:text-white'
+            }`}
+          >
+            {lang}
+          </button>
+        ))}
       </div>
 
       {/* Step 1: Install Package */}
       <div className="bg-pace-surface border border-pace-border rounded-xl p-6 space-y-3">
         <div className="flex items-center space-x-2 text-white font-semibold text-base">
-          <span className="w-6 h-6 rounded-full bg-pace-accent text-xs flex items-center justify-center font-bold">1</span>
-          <span>Install Python SDK</span>
+          <span className="w-6 h-6 rounded-full bg-pace-accent text-xs flex items-center justify-center font-bold text-pace-bg">1</span>
+          <span className="capitalize">Install {activeTab} Package</span>
         </div>
         <div className="bg-pace-bg border border-pace-border rounded-lg p-3.5 flex items-center justify-between font-mono text-sm">
-          <span className="text-pace-accent">pip install pace-sdk openai anthropic</span>
+          <span className="text-pace-accent">{installCommands[activeTab]}</span>
         </div>
       </div>
 
-      {/* Step 2: OpenAI Instrumentation */}
+      {/* Step 2: Code Instrumentation */}
       <div className="bg-pace-surface border border-pace-border rounded-xl p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-white font-semibold text-base">
-            <span className="w-6 h-6 rounded-full bg-pace-accent text-xs flex items-center justify-center font-bold">2</span>
-            <span>OpenAI Client Example</span>
+            <span className="w-6 h-6 rounded-full bg-pace-accent text-xs flex items-center justify-center font-bold text-pace-bg">2</span>
+            <span className="capitalize">{activeTab} Client Integration</span>
           </div>
           <button
             onClick={() => {
-              navigator.clipboard.writeText(openAiCode);
-              setCopiedOpenAI(true);
-              setTimeout(() => setCopiedOpenAI(false), 2000);
+              navigator.clipboard.writeText(codeSnippets[activeTab]);
+              setCopiedCode(true);
+              setTimeout(() => setCopiedCode(false), 2000);
             }}
             className="text-xs bg-pace-border hover:bg-pace-border/80 text-white px-3 py-1.5 rounded-lg flex items-center space-x-1"
           >
-            {copiedOpenAI ? <Check className="w-3.5 h-3.5 text-pace-success" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copiedOpenAI ? 'Copied' : 'Copy Code'}</span>
+            {copiedCode ? <Check className="w-3.5 h-3.5 text-pace-success" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>{copiedCode ? 'Copied' : 'Copy Code'}</span>
           </button>
         </div>
         <pre className="bg-pace-bg border border-pace-border rounded-lg p-4 font-mono text-xs text-pace-text overflow-x-auto leading-relaxed">
-          {openAiCode}
-        </pre>
-      </div>
-
-      {/* Step 3: Anthropic Instrumentation */}
-      <div className="bg-pace-surface border border-pace-border rounded-xl p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-white font-semibold text-base">
-            <span className="w-6 h-6 rounded-full bg-pace-accent text-xs flex items-center justify-center font-bold">3</span>
-            <span>Anthropic Client Example</span>
-          </div>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(anthropicCode);
-              setCopiedAnthropic(true);
-              setTimeout(() => setCopiedAnthropic(false), 2000);
-            }}
-            className="text-xs bg-pace-border hover:bg-pace-border/80 text-white px-3 py-1.5 rounded-lg flex items-center space-x-1"
-          >
-            {copiedAnthropic ? <Check className="w-3.5 h-3.5 text-pace-success" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copiedAnthropic ? 'Copied' : 'Copy Code'}</span>
-          </button>
-        </div>
-        <pre className="bg-pace-bg border border-pace-border rounded-lg p-4 font-mono text-xs text-pace-text overflow-x-auto leading-relaxed">
-          {anthropicCode}
+          {codeSnippets[activeTab]}
         </pre>
       </div>
 

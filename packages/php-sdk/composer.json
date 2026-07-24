@@ -1,0 +1,30 @@
+{
+  "name": "pace/sdk",
+  "description": "Official PHP SDK for Pace LLM Observability Platform",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Pace Team",
+      "email": "support@pace.dev"
+    }
+  ],
+  "require": {
+    "php": ">=8.0",
+    "ext-json": "*",
+    "ext-curl": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5 || ^10.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Pace\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Pace\\Tests\\": "tests/"
+    }
+  }
+}

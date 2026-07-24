@@ -124,9 +124,33 @@ pace.record({
 ```
 
 </td>
-<td width="33%" valign="top">
+<td width="25%" valign="top">
 
-### Option 3 — Local Proxy (Zero Code)
+### Option 3 — PHP SDK
+
+```bash
+composer require pace/sdk
+```
+
+```php
+use Pace\PaceClient;
+
+$pace = new PaceClient(
+  apiKey: 'pace_YOUR_KEY'
+);
+
+$pace->record([
+  'provider' => 'openai',
+  'model'    => 'gpt-4o',
+  'input_tokens'  => 1200,
+  'output_tokens' => 400
+]);
+```
+
+</td>
+<td width="25%" valign="top">
+
+### Option 4 — Local Proxy (Zero Code)
 
 ```bash
 pip install pace-proxy
@@ -275,6 +299,7 @@ pace/
 ├── packages/
 │   ├── python-sdk/                # pace-sdk: track(), flush(), ResilientTelemetryQueue
 │   ├── typescript-sdk/            # @pace/sdk: PaceClient, ResilientTelemetryQueue (Node/TS)
+│   ├── php-sdk/                   # pace/sdk: PaceClient, OpenAIWrapper (PHP 8.0+)
 │   └── proxy/                     # pace-proxy: reverse proxy + provider allowlist
 │
 ├── docker-compose.yml             # One-command deploy
