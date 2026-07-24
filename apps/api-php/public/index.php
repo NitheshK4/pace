@@ -36,6 +36,59 @@ if ($uri === '/healthz' && $method === 'GET') {
     exit;
 }
 
+if ($uri === '/v1/auth/login' && $method === 'POST') {
+    $rawInput = file_get_contents('php://input');
+    $payload = json_decode($rawInput, true);
+
+    $email = $payload['email'] ?? '';
+    $password = $payload['password'] ?? '';
+
+    if (!empty($email) && !empty($password)) {
+        echo json_encode([
+            'access_token' => 'pace_token_demo_php_' . bin2hex(random_bytes(16)),
+            'token_type' => 'bearer'
+        ]);
+        exit;
+    }
+
+    http_response_code(401);
+    echo json_encode(['detail' => 'Invalid email or password']);
+    exit;
+}
+
+if ($uri === '/v1/auth/register' && $method === 'POST') {
+    $rawInput = file_get_contents('php://input');
+    $payload = json_decode($rawInput, true);
+
+    echo json_encode([
+        'message' => 'User registered successfully',
+        'email' => $payload['email'] ?? 'demo@pace.dev'
+    ]);
+    exit;
+}
+
+if ($uri === '/v1/projects' && $method === 'GET') {
+    echo json_encode([
+        [
+            'id' => 'proj_default',
+            'name' => 'Default Project',
+            'created_at' => gmdate('Y-m-d\TH:i:s\Z')
+        ]
+    ]);
+    exit;
+}
+
+if (str_starts_with($uri, '/v1/projects/') && str_ends_with($uri, '/keys') && $method === 'GET') {
+    echo json_encode([
+        [
+            'id' => 'key_1',
+            'key_prefix' => 'pace_demokey',
+            'created_at' => gmdate('Y-m-d\TH:i:s\Z')
+        ]
+    ]);
+    exit;
+}
+
 if ($uri === '/v1/ingest/events' && $method === 'POST') {
     $rawInput = file_get_contents('php_input');
     if (empty($rawInput)) {
