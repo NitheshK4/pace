@@ -2,9 +2,15 @@
 
 require_once __DIR__ . '/../src/Database.php';
 require_once __DIR__ . '/../src/CostCalculator.php';
+require_once __DIR__ . '/../src/Services/BudgetService.php';
+require_once __DIR__ . '/../src/Services/AnomalyDetector.php';
+require_once __DIR__ . '/../src/Services/CsvExporter.php';
 
 use PaceApi\Database;
 use PaceApi\CostCalculator;
+use PaceApi\Services\BudgetService;
+use PaceApi\Services\AnomalyDetector;
+use PaceApi\Services\CsvExporter;
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -236,6 +242,29 @@ if ($uri === '/v1/analytics/events' && $method === 'GET') {
         'events' => $events,
         'total' => $totalCount
     ]);
+    exit;
+}
+
+if ($uri === '/v1/exports/csv' && $method === 'GET') {
+    $projectId = $_GET['project_id'] ?? 'proj_default';
+    $csvData = CsvExporter::exportCsv($pdo, $projectId);
+
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="pace_telemetry_' . $projectId . '.csv"');
+    echo $csvData;
+    exit;
+}
+
+if ($uri === '/v1/budgets/status' && $method === 'GET') {
+    $projectId = $_GET['project_id'] ?? 'proj_default';
+    $limitUsd = isset($_GET['limit_usd']) ? (float)$_GET['limit_usd'] : 500.0;
+    echo json_encode(BudgetService::getBudgetStatus($pdo, $projectId, $limitUsd));
+    exit;
+}
+
+if ($uri === '/v1/system/anomalies' && $method === 'GET') {
+    $projectId = $_GET['project_id'] ?? 'proj_default';
+    echo json_encode(AnomalyDetector::detectAnomalies($pdo, $projectId));
     exit;
 }
 
