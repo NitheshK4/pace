@@ -101,4 +101,44 @@ def _wrap_anthropic_client(client: Any, telemetry_queue: ResilientTelemetryQueue
             telemetry_queue.enqueue(telemetry)
             raise exc
 
-    client.messages.create = sync_wrapper
+class PaceClient:
+    """
+    Context-managed Pace telemetry client for explicit tracking and auto-flushing.
+    Usage:
+        with PaceClient(api_key="pace_key", endpoint="http://localhost:8000") as pace:
+            client = pace.track(openai_client)
+            client.chat.completions.create(...)
+    """
+    def __init__(self, api_key: Optional[str] = None, endpoint: Optional[str] = None):
+        self.api_key = api_key
+        self.endpoint = endpoint
+        self.queue = get_telemetry_queue(endpoint, api_key)
+
+    def track(
+        self,
+        client: Any,
+        metadata: Optional[Dict[str, Any]] = None,
+        tags: Optional[Dict[str, str]] = None,
+        enabled: bool = True
+    ) -> Any:
+        combined_meta = dict(metadata or {})
+        if tags:
+            combined_meta["tags"] = tags
+        return track(
+            client,
+            api_key=self.api_key,
+            endpoint=self.endpoint,
+            metadata=combined_meta,
+            enabled=enabled
+        )
+
+    def flush(self, timeout: float = 5.0):
+        if self.queue:
+            self.queue.flush(timeout=timeout)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.flush()
+

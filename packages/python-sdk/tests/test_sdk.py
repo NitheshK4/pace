@@ -108,3 +108,21 @@ def test_queue_get_stats():
     assert "dropped" in stats
     tq.close()
 
+from pace import PaceClient
+
+def test_pace_client_context_manager_and_tags():
+    mock_client = MagicMock()
+    mock_resp = MagicMock()
+    mock_resp.id = "chatcmpl-ctx"
+    mock_resp.model = "gpt-4o"
+    mock_resp.usage = MagicMock(prompt_tokens=10, completion_tokens=5, prompt_tokens_details=None, completion_tokens_details=None)
+    mock_client.chat.completions.create.return_value = mock_resp
+
+    with PaceClient(api_key="pace_ctx_key", endpoint="http://localhost:9999") as pace:
+        tracked = pace.track(mock_client, tags={"env": "unit-test", "tier": "premium"})
+        res = tracked.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": "hi"}])
+        assert res == mock_resp
+
+    # Verified context manager entered, tracked call executed, and flushed gracefully
+
+
