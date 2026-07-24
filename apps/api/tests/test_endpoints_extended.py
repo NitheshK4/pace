@@ -98,3 +98,53 @@ async def test_csv_export_endpoint():
         assert "text/csv" in csv_res.headers["content-type"]
         assert "evt_csv_001" in csv_res.text
         assert "gpt-4o" in csv_res.text
+
+@pytest.mark.asyncio
+async def test_events_min_latency_and_errors_filtering():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        await ac.post("/v1/auth/register", json={"email": "filtertest@pace.dev", "password": "Password123!"})
+        l_res = await ac.post("/v1/auth/login", json={"email": "filtertest@pace.dev", "password": "Password123!"})
+        token = l_res.json()["access_token"]
+        auth_headers = {"Authorization": f"Bearer {token}"}
+
+        proj_res = await ac.post("/v1/projects", json={"name": "Filter Test Project"}, headers=auth_headers)
+        project_id = proj_res.json()["project"]["id"]
+        raw_key = proj_res.json()["initial_api_key"]["raw_key"]
+
+        # Ingest fast ok event
+        await ac.post("/v1/ingest/events", json={
+            "event_id": "evt_fast_ok",
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "input_tokens": 100,
+            "output_tokens": 50,
+            "latency_ms": 120,
+            "status_code": 200
+        }, headers={"Authorization": f"Bearer {raw_key}"})
+
+        # Ingest slow error event
+        await ac.post("/v1/ingest/events", json={
+            "event_id": "evt_slow_err",
+            "provider": "openai",
+            "model": "gpt-4o",
+            "input_tokens": 1000,
+            "output_tokens": 200,
+            "latency_ms": 1500,
+            "status_code": 429
+        }, headers={"Authorization": f"Bearer {raw_key}"})
+
+        # Query min latency filter (>= 500ms)
+        latency_res = await ac.get(f"/v1/analytics/events?project_id={project_id}&min_latency_ms=500", headers=auth_headers)
+        assert latency_res.status_code == 200
+        assert latency_res.headers.get("X-Total-Count") == "1"
+        data = latency_res.json()
+        assert len(data["events"]) == 1
+        assert data["events"][0]["event_id"] == "evt_slow_err"
+
+        # Query errors only filter
+        err_res = await ac.get(f"/v1/analytics/events?project_id={project_id}&errors_only=true", headers=auth_headers)
+        assert err_res.status_code == 200
+        data_err = err_res.json()
+        assert len(data_err["events"]) == 1
+        assert data_err["events"][0]["status_code"] == 429
+

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, and_, or_, case, Integer
 from app.core.database import get_db
@@ -200,8 +200,11 @@ async def list_events(
     provider: Optional[str] = Query(None),
     model: Optional[str] = Query(None),
     status_code: Optional[int] = Query(None),
+    min_latency_ms: Optional[int] = Query(None, ge=0),
+    errors_only: Optional[bool] = Query(None),
     cursor: Optional[str] = Query(None),
     limit: int = Query(50, ge=1, le=200),
+    response: Response = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -219,6 +222,10 @@ async def list_events(
         conditions.append(UsageEvent.model == model)
     if status_code:
         conditions.append(UsageEvent.status_code == status_code)
+    if min_latency_ms is not None:
+        conditions.append(UsageEvent.latency_ms >= min_latency_ms)
+    if errors_only:
+        conditions.append(UsageEvent.status_code >= 400)
     if cursor:
         conditions.append(UsageEvent.id < cursor)
 
@@ -240,6 +247,9 @@ async def list_events(
     total_stmt = select(func.count(UsageEvent.id)).where(and_(*conditions))
     t_res = await db.execute(total_stmt)
     total_count = t_res.scalar() or 0
+
+    if response:
+        response.headers["X-Total-Count"] = str(total_count)
 
     return EventsListResponse(
         events=[UsageEventResponse.model_validate(e) for e in events],
