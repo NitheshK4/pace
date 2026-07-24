@@ -85,19 +85,15 @@ pip install pace-sdk
 
 ```python
 from openai import OpenAI
-from pace import track
+from pace import PaceClient
 
-# One line. That's it.
-client = track(
-    OpenAI(),
-    api_key="pace_YOUR_KEY",
-    endpoint="http://localhost:8000"
-)
-
-res = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": "Hi!"}]
-)
+# Context manager with auto-flush on exit
+with PaceClient(api_key="pace_YOUR_KEY", endpoint="http://localhost:8000") as pace:
+    client = pace.track(OpenAI(), tags={"env": "prod"})
+    res = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": "Hi!"}]
+    )
 ```
 
 </td>
@@ -318,7 +314,7 @@ Authorization: Bearer pace_...
 GET /v1/analytics/overview?project_id=...
 GET /v1/analytics/timeseries?project_id=...&granularity=hour
 GET /v1/analytics/breakdown?project_id=...
-GET /v1/analytics/events?project_id=...&limit=50
+GET /v1/analytics/events?project_id=...&limit=50&min_latency_ms=500&errors_only=true
 GET /v1/analytics/live-tail?project_id=...    # SSE stream
 ```
 </details>
